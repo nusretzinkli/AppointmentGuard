@@ -1,0 +1,30 @@
+version: '3.4'
+
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: appointment_sql_server
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=Password123!
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql_data:/var/opt/mssql
+
+  app:
+    image: appointment-guard-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: appointment_guard_app
+    ports:
+      - "5000:8080"
+    depends_on:
+      - db
+    environment:
+      - ConnectionStrings__SqlServer=Server=db;Database=AppointmentGuardDb;User Id=sa;Password=Password123!;TrustServerCertificate=True;
+      - ASPNETCORE_ENVIRONMENT=Development
+
+volumes:
+  sql_data:
