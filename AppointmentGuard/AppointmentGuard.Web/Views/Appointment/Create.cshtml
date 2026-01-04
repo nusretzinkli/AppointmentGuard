@@ -1,0 +1,308 @@
+﻿@using System.Security.Claims
+
+@{
+    ViewData["Title"] = "Randevu Al";
+    var polyclinics = ViewBag.Polyclinics as List<AppointmentGuard.Core.DTOs.PolyclinicDto>;
+    var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+}
+
+<style>
+    .time-slot {
+        padding: 10px;
+        margin: 5px;
+        border: 1px solid #444;
+        border-radius: 5px;
+        text-align: center;
+        cursor: pointer;
+        background-color: #1a1a1a;
+        color: white;
+        transition: all 0.3s ease;
+        min-width: 80px;
+    }
+
+        .time-slot:hover {
+            border-color: var(--neon-blue);
+            background-color: #222;
+        }
+
+        .time-slot.selected {
+            background-color: #0d6efd !important;
+            color: white !important;
+            border-color: #0d6efd !important;
+            font-weight: bold;
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(13, 110, 253, 0.5);
+        }
+
+        .time-slot.full {
+            background-color: #dc3545 !important;
+            color: white !important;
+            cursor: not-allowed;
+            opacity: 0.6;
+            text-decoration: line-through;
+            border-color: #dc3545 !important;
+        }
+
+        .time-slot.past {
+            background-color: #333 !important;
+            color: #777 !important;
+            cursor: not-allowed;
+            opacity: 0.5;
+            border-color: #444 !important;
+        }
+
+    .time-slot-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: center;
+    }
+</style>
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-8">
+        <div class="card p-5 shadow-lg" style="border: 1px solid var(--neon-blue); background-color: rgba(0,0,0,0.85);">
+
+            <div class="text-center mb-5">
+                <h2 class="fw-bold" style="color: var(--neon-blue); text-shadow: 0 0 15px var(--neon-blue);">
+                    <i class="bi bi-calendar-plus-fill me-2"></i> RANDEVU OLUŞTUR
+                </h2>
+                <p class="text-white-50">Önce bölüm ve doktor seçin, ardından size uygun saati işaretleyin.</p>
+            </div>
+
+            <form id="AppointmentForm">
+                <div class="row">
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label text-white fw-bold">Poliklinik</label>
+                        <select id="PolyclinicSelect" class="form-control form-select-lg" style="background-color: #1a1a1a; color: white; border: 1px solid #444;">
+                            <option value="">-- Bölüm Seçiniz --</option>
+                            @if (polyclinics != null)
+                            {
+                                foreach (var item in polyclinics)
+                                {
+                                    <option value="@item.Id">@item.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+
+                    <div class="col-md-6 mb-4">
+                        <label class="form-label text-white fw-bold">Doktor</label>
+                        <select id="DoctorSelect" class="form-control form-select-lg" style="background-color: #1a1a1a; color: white; border: 1px solid #444;" disabled>
+                            <option value="">-- Önce Bölüm Seçiniz --</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-md-12 mb-3">
+                        <label class="form-label text-white fw-bold">Randevu Tarihi</label>
+                        <input type="date" id="AppointmentDate" class="form-control form-control-lg" style="background-color: #1a1a1a; color: white; border: 1px solid #444;" />
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <label class="text-white fw-bold mb-3">Müsait Saatler</label>
+                    <div id="TimeSlotsContainer" class="time-slot-container">
+                        <p class="text-white-50 small">Saatleri görmek için lütfen bir doktor ve tarih seçiniz.</p>
+                    </div>
+                    <input type="hidden" id="SelectedTime" name="SelectedTime" />
+                    <input type="hidden" id="LoggedInUserId" value="@userId" />
+                </div>
+
+                <div class="d-grid gap-2 mt-5">
+                    <button type="button" onclick="saveAppointment()" class="btn btn-vibrant btn-lg py-3">
+                        RANDEVUYU ONAYLA
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        var baseUrl = "https://localhost:7163/api";
+
+        $(document).ready(function () {
+
+            var today = new Date().toISOString().split('T')[0];
+            document.getElementById("AppointmentDate").setAttribute('min', today);
+
+            $('#PolyclinicSelect').change(function () {
+                var polyclinicId = $(this).val();
+                var doctorSelect = $('#DoctorSelect');
+
+                doctorSelect.empty().append('<option value="">Yükleniyor...</option>').prop('disabled', true);
+
+                if (polyclinicId) {
+                    $.get(baseUrl + "/Doctors/GetByPolyclinic/" + polyclinicId, function (data) {
+                        doctorSelect.empty().append('<option value="">-- Doktor Seçiniz --</option>');
+                        $.each(data, function (i, doctor) {
+                            doctorSelect.append('<option value="' + doctor.id + '">' + doctor.firstName + ' ' + doctor.lastName + '</option>');
+                        });
+                        doctorSelect.prop('disabled', false);
+                    }).fail(function () {
+                        Swal.fire('Hata', 'Doktorlar yüklenemedi. Port numarasını kontrol edin.', 'error');
+                        doctorSelect.empty().append('<option value="">Hata!</option>');
+                    });
+                } else {
+                    doctorSelect.empty().append('<option value="">-- Önce Bölüm Seçiniz --</option>');
+                }
+            });
+
+            $('#AppointmentDate, #DoctorSelect').change(function () {
+                var doctorId = $('#DoctorSelect').val();
+                var date = $('#AppointmentDate').val();
+
+                if (doctorId && date) {
+                    $('#TimeSlotsContainer').html('<span class="text-white">Müsaitlik durumu kontrol ediliyor...</span>');
+
+                    $.get(baseUrl + "/Appointments/doctor/" + doctorId + "?date=" + date, function (takenAppointments) {
+                        var takenTimes = [];
+                        if (takenAppointments) {
+                            takenAppointments.forEach(function (app) {
+                                var timePart = app.appointmentDate ? app.appointmentDate.split('T')[1].substring(0, 5) : "";
+                                takenTimes.push(timePart);
+                            });
+                        }
+                        renderTimeSlots(takenTimes);
+                    }).fail(function () {
+                        $('#TimeSlotsContainer').html('<span class="text-danger">Saat bilgisi çekilemedi.</span>');
+                    });
+                }
+            });
+
+            function renderTimeSlots(takenTimes) {
+                var container = $('#TimeSlotsContainer');
+                container.empty();
+
+                var now = new Date();
+                var currentHour = now.getHours();
+                var currentMin = now.getMinutes();
+
+                var selectedDateVal = $('#AppointmentDate').val();
+                var selectedDate = new Date(selectedDateVal);
+
+                var isToday = selectedDate.getDate() === now.getDate() &&
+                              selectedDate.getMonth() === now.getMonth() &&
+                              selectedDate.getFullYear() === now.getFullYear();
+
+                var times = ["09:00", "09:30", "10:00", "10:30", "11:00", "11:30",
+                             "13:00", "13:30", "14:00", "14:30", "15:00", "15:30", "16:00", "16:30"];
+
+                times.forEach(function (time) {
+                    var isFull = takenTimes.includes(time);
+                    var isPast = false;
+
+                    if (isToday) {
+                        var slotHour = parseInt(time.split(':')[0]);
+                        var slotMin = parseInt(time.split(':')[1]);
+
+                        if (slotHour < currentHour || (slotHour === currentHour && slotMin < currentMin)) {
+                            isPast = true;
+                        }
+                    }
+
+                    var cssClass = "time-slot";
+                    var onclick = "";
+
+                    if (isFull) {
+                        cssClass += " full";
+                    } else if (isPast) {
+                        cssClass += " past";
+                    } else {
+                        onclick = "selectTime(this, '" + time + "')";
+                    }
+
+                    var html = `<div class="${cssClass}" onclick="${onclick}">${time}</div>`;
+                    container.append(html);
+                });
+            }
+
+            window.selectTime = function (element, time) {
+                $('.time-slot').removeClass('selected');
+                $(element).addClass('selected');
+                $('#SelectedTime').val(time);
+            };
+        });
+
+        function saveAppointment() {
+            var doctorId = $('#DoctorSelect').val();
+            var datePart = $('#AppointmentDate').val();
+            var timePart = $('#SelectedTime').val();
+            var patientId = $('#LoggedInUserId').val();
+
+            if (!patientId) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Giriş Yapmalısınız',
+                    text: 'Randevu alabilmek için lütfen giriş yapın.',
+                    confirmButtonText: 'Giriş Sayfasına Git',
+                    confirmButtonColor: '#0d6efd',
+                    background: '#1a1a1a', color: '#fff'
+                }).then((result) => {
+                    if (result.isConfirmed) window.location.href = "/Auth/Login";
+                });
+                return;
+            }
+
+            if (!doctorId || !datePart || !timePart) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Eksik Bilgi',
+                    text: 'Lütfen tüm alanları (Doktor, Tarih ve Saat) eksiksiz seçiniz!',
+                    confirmButtonColor: '#dc3545',
+                    background: '#1a1a1a', color: '#fff'
+                });
+                return;
+            }
+
+            var fullDateTime = datePart + "T" + timePart + ":00";
+            var appointmentData = {
+                DoctorId: parseInt(doctorId),
+                AppointmentDate: fullDateTime,
+                PatientId: parseInt(patientId)
+            };
+
+            $.ajax({
+                url: baseUrl + "/Appointments",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(appointmentData),
+                success: function (response) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Harika!',
+                        text: 'Randevunuz başarıyla oluşturuldu.',
+                        confirmButtonText: 'Tamam',
+                        confirmButtonColor: '#0d6efd',
+                        background: '#1a1a1a', color: '#fff'
+                    }).then(() => {
+                        window.location.href = "/Appointment/Index";
+                    });
+                },
+                error: function (xhr) {
+                    var errorMsg = "Bir hata oluştu.";
+                    if (xhr.responseText) {
+                        try {
+                            var err = JSON.parse(xhr.responseText);
+                            errorMsg = err.title || err.message || JSON.stringify(err.errors) || xhr.responseText;
+                        } catch (e) {
+                            errorMsg = xhr.responseText;
+                        }
+                    }
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Hata!',
+                        text: errorMsg,
+                        confirmButtonColor: '#dc3545',
+                        background: '#1a1a1a', color: '#fff'
+                    }).then(() => {
+                        $('#AppointmentDate').trigger('change');
+                    });
+                }
+            });
+        }
+    </script>
+}

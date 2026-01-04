@@ -1,0 +1,42 @@
+﻿@{
+    ViewData["Title"] = "Ana Sayfa";
+    var userName = ViewBag.UserName as string;
+}
+
+<div class="text-center mt-5">
+
+    @if (!string.IsNullOrEmpty(userName))
+    {
+        <h1 class="display-3 fw-bold" style="color: var(--neon-blue); text-shadow: 0 0 20px var(--neon-blue);">
+            HOŞGELDİN, @userName.ToUpper()! 👋
+        </h1>
+
+        <p class="lead mt-3 text-white-50" style="font-size: 1.2rem;">
+            Sağlık durumun bugün nasıl? Randevularını kontrol etmeye hazır mısın?
+        </p>
+
+        <div class="mt-5">
+            <a asp-controller="Appointment" asp-action="Create" class="btn btn-vibrant btn-lg px-5 py-3 d-inline-flex align-items-center justify-content-center" style="font-size: 1.2rem; min-width: 250px;">
+                <i class="bi bi-calendar-check me-2"></i>
+                YENİ RANDEVU AL
+            </a>
+
+            <br /><br />
+            <a asp-controller="Appointment" asp-action="Index" class="text-decoration-none mt-3 d-inline-block" style="color: var(--pro-red); transition: 0.3s;">
+                Randevularımı Listele
+            </a>
+        </div>
+    }
+    else
+    {
+        <h1 class="display-4 text-white fw-bold" style="text-shadow: 0 0 10px rgba(255,255,255,0.3);">AppointmentGuard'a Hoşgeldiniz</h1>
+
+        <p class="lead text-white-50">Sağlığınız için en hızlı ve güvenli randevu sistemi.</p>
+
+        <div class="mt-4 d-flex justify-content-center gap-3">
+            <a asp-controller="Auth" asp-action="Login" class="btn btn-vibrant btn-lg px-5">GİRİŞ YAP</a>
+            <a asp-controller="Auth" asp-action="Register" class="btn btn-vibrant btn-lg px-5">KAYIT OL</a>
+        </div>
+    }
+
+</div>

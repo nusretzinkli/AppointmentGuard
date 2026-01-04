@@ -1,0 +1,76 @@
+﻿@model AppointmentGuard.Core.DTOs.RegisterDto
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6">
+        <div class="card p-4 shadow-lg" style="border: 1px solid var(--neon-blue);">
+            <div class="text-center mb-4">
+                <h2 style="color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue);">YENİ HASTA KAYDI</h2>
+                <p class="text-muted">Aramıza katıl, sağlığını neon hızında yönet!</p>
+            </div>
+
+            <form method="post" asp-controller="Auth" asp-action="Register">
+
+                @if (ViewBag.Error != null)
+                {
+                    <div class="alert alert-danger text-center" role="alert">
+                        @ViewBag.Error
+                    </div>
+                }
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label>Adınız</label>
+                        <input asp-for="FirstName" type="text" class="form-control" placeholder="Örn: Ahmet" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label>Soyadınız</label>
+                        <input asp-for="LastName" type="text" class="form-control" placeholder="Örn: Yılmaz" />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label>E-Posta Adresi</label>
+                    <input asp-for="Email" type="email" class="form-control" placeholder="name@example.com" />
+                </div>
+
+                <div class="mb-3">
+                    <label>Şifre</label>
+                    <input asp-for="Password" type="password" class="form-control" placeholder="********" />
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label>TC Kimlik No</label>
+                        <input asp-for="TcNo" type="text" class="form-control" placeholder="11 haneli TC" maxlength="11" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label>Telefon</label>
+                        <input asp-for="Phone" type="text" class="form-control" placeholder="555 444 33 22" />
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label>Doğum Tarihi</label>
+                        <input asp-for="DateOfBirth" type="date" class="form-control" />
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label>Cinsiyet</label>
+                        <select asp-for="Gender" class="form-control">
+                            <option value="1">Erkek</option>
+                            <option value="2">Kadın</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg">KAYIT OL</button>
+                </div>
+            </form>
+
+            <div class="text-center mt-3">
+                <a asp-controller="Auth" asp-action="Login" style="color: var(--neon-blue); text-decoration: none;">Zaten hesabın var mı? Giriş Yap</a>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,105 @@
+﻿@model List<AppointmentGuard.Core.DTOs.AppointmentDto>
+
+@{
+    ViewData["Title"] = "Randevularım";
+}
+
+<div class="container mt-5">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold" style="color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue);">
+            📅 RANDEVULARIM
+        </h2>
+        <a asp-action="Create" class="btn btn-vibrant">
+            <i class="bi bi-plus-lg"></i> Yeni Randevu Al
+        </a>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'İşlem Başarılı',
+                    text: '@Html.Raw(TempData["Success"])',
+                    background: '#1a1a1a',
+                    color: '#fff',
+                    confirmButtonColor: '#0d6efd'
+                });
+            });
+        </script>
+    }
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="alert alert-secondary bg-dark text-white-50 border-secondary p-5 text-center">
+            <h4>Henüz hiç randevunuz yok.</h4>
+            <p>Hemen sağ üstteki butondan yeni bir randevu oluşturabilirsiniz.</p>
+        </div>
+    }
+    else
+    {
+        <div class="card shadow-lg" style="background-color: #1a1a1a; border: 1px solid #444;">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover mb-0 align-middle">
+                    <thead style="background-color: #000;">
+                        <tr>
+                            <th class="py-3 ps-4">Tarih</th>
+                            <th>Saat</th>
+                            <th>Poliklinik</th>
+                            <th>Doktor</th>
+                            <th>Durum</th>
+                            <th class="text-end pe-4">İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var item in Model.OrderByDescending(x => x.AppointmentDate))
+                        {
+                            var date = item.AppointmentDate.ToString("dd.MM.yyyy");
+                            var time = item.AppointmentDate.ToString("HH:mm");
+
+                            <tr>
+                                <td class="ps-4 fw-bold">@date</td>
+                                <td><span class="badge bg-primary">@time</span></td>
+                                <td class="text-white-50">@item.PolyclinicName</td>
+                                <td class="fw-bold text-white">@item.DoctorName</td>
+                                <td><span class="badge bg-success">Aktif</span></td>
+                                <td class="text-end pe-4">
+                                    <a href="javascript:void(0);"
+                                       onclick="cancelAppointment(@item.Id)"
+                                       class="btn btn-sm btn-outline-danger">
+                                        <i class="bi bi-trash"></i> İptal Et
+                                    </a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        function cancelAppointment(id) {
+            Swal.fire({
+                title: 'Emin misiniz?',
+                text: "Bu randevuyu iptal etmek istediğinize emin misiniz?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc3545',
+                cancelButtonColor: '#6c757d',
+                confirmButtonText: 'Evet, İptal Et!',
+                cancelButtonText: 'Vazgeç',
+                background: '#1a1a1a',
+                color: '#fff'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    window.location.href = "/Appointment/Cancel/" + id;
+                }
+            });
+        }
+    </script>
+}

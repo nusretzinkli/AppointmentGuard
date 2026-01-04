@@ -1,0 +1,40 @@
+﻿@model AppointmentGuard.Core.DTOs.LoginDto
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-4">
+        <div class="card p-4 shadow-lg" style="border: 1px solid var(--pro-blue); background-color: #1a1a1a;">
+            <div class="text-center mb-4">
+                <h2 style="color: var(--pro-blue); text-shadow: 0 0 10px rgba(52, 152, 219, 0.5);">SİSTEME GİRİŞ</h2>
+                <p class="text-white-50">Randevularına erişmek için kimliğini doğrula.</p>
+            </div>
+
+            <form method="post" asp-controller="Auth" asp-action="Login">
+
+                @if (ViewBag.Error != null)
+                {
+                    <div class="alert alert-danger text-center" role="alert">
+                        @ViewBag.Error
+                    </div>
+                }
+
+                <div class="mb-3">
+                    <label class="text-white fw-bold">E-Posta</label>
+                    <input asp-for="Email" type="email" class="form-control" placeholder="name@example.com" style="background-color: #222; color: white; border: 1px solid #444;" />
+                </div>
+
+                <div class="mb-3">
+                    <label class="text-white fw-bold">Şifre</label>
+                    <input asp-for="Password" type="password" class="form-control" placeholder="********" style="background-color: #222; color: white; border: 1px solid #444;" />
+                </div>
+
+                <div class="d-grid gap-2 mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg">GİRİŞ YAP</button>
+                </div>
+            </form>
+
+            <div class="text-center mt-3">
+                <a asp-controller="Auth" asp-action="Register" style="color: var(--pro-blue); text-decoration: none;">Hesabın yok mu? Kayıt Ol</a>
+            </div>
+        </div>
+    </div>
+</div>
